@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bharat AI Index (BAIX)</title>
+<meta name="description" content="A rules-based index of Indian listed companies that earn revenue from artificial intelligence.">
+<style>
+  :root { --bg:#f7f6f2; --card:#ffffff; --ink:#1c1b19; --muted:#6b6862; --line:#e4e1d9;
+          --accent:#0f5c4d; --up:#1d7a46; --down:#b3261e; --warn-bg:#fff4d6; --warn:#7a5a00; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#121311; --card:#1b1c1a; --ink:#ecebe7; --muted:#a3a19b; --line:#2c2d2a;
+            --accent:#5fc4ab; --up:#5ccf8c; --down:#ff8a80; --warn-bg:#3a3110; --warn:#f1d27a; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:960px; margin:0 auto; padding:32px 16px 64px; }
+  header .eyebrow { font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  h1 { font-size:clamp(28px,5vw,40px); margin:4px 0 6px; letter-spacing:-.01em; }
+  .tagline { color:var(--muted); margin:0 0 20px; max-width:640px; }
+  .banner { background:var(--warn-bg); color:var(--warn); border-radius:10px; padding:10px 14px;
+            font-size:14px; margin-bottom:20px; }
+  .hero { display:flex; flex-wrap:wrap; align-items:baseline; gap:12px 20px; margin:8px 0 24px; }
+  .level { font-size:clamp(40px,9vw,64px); font-weight:700; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+  .chg { font-size:20px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .up { color:var(--up); } .down { color:var(--down); }
+  .asof { color:var(--muted); font-size:14px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:20px; }
+  .card h2 { font-size:18px; margin:0 0 4px; }
+  .card p.sub { margin:0 0 14px; color:var(--muted); font-size:14px; }
+  .chartbox { position:relative; height:320px; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .stat .k { font-size:13px; color:var(--muted); }
+  .stat .v { font-size:22px; font-weight:650; font-variant-numeric:tabular-nums; }
+  table { width:100%; border-collapse:collapse; font-size:15px; }
+  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); }
+  th { font-size:13px; color:var(--muted); font-weight:600; }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .tag { display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--line); }
+  .tag.pure { background:var(--accent); color:var(--card); border-color:var(--accent); }
+  .bar { height:6px; background:var(--line); border-radius:3px; margin-top:4px; }
+  .bar > span { display:block; height:100%; background:var(--accent); border-radius:3px; }
+  .tablewrap { overflow-x:auto; }
+  a { color:var(--accent); }
+  footer { color:var(--muted); font-size:13px; margin-top:32px; }
+  ul.links { padding-left:18px; margin:0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Bharat AI Index · BAIX</div>
+    <h1>India's pure-play AI index</h1>
+    <p class="tagline">A rules-based index of Indian listed companies that <strong>earn revenue from AI</strong>: AI compute, AI systems, AI software and AI services. Not the picks and shovels.</p>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <section class="hero">
+    <div class="level" id="level">–</div>
+    <div class="chg" id="chg"></div>
+    <div class="asof" id="asof"></div>
+  </section>
+
+  <section class="card">
+    <h2>BAIX vs benchmarks</h2>
+    <p class="sub" id="chartsub">All series rebased to 1,000 on the base date.</p>
+    <div class="chartbox"><canvas id="chart" aria-label="BAIX compared with Nifty 50 and Nifty IT"></canvas></div>
+  </section>
+
+  <section class="card">
+    <h2>Return since base date</h2>
+    <p class="sub" id="retsub"></p>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section class="card">
+    <h2>Constituents</h2>
+    <p class="sub">Pure tier (AI ≥ 20% of revenue) holds 75% of the index; broad tier (AI 5–20%) holds 25%. Single-stock cap 20%.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Company</th><th>Tier</th><th class="num">AI score</th><th class="num">Weight</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>How BAIX works</h2>
+    <ul class="links">
+      <li>Only revenue a company itself labels as AI counts — not AI spending, AI-powered products, deal wins or company names.</li>
+      <li>Universe screened from all 2,620 NSE-listed equities down to companies with disclosed AI revenue.</li>
+      <li>Reviewed twice a year, with cut-offs on SEBI's results deadlines (30 May, 14 November).</li>
+      <li><a href="https://github.com/Harshapp45/india-pure-ai-index/blob/main/research/methodology.md">Read the full methodology</a> · <a href="https://github.com/Harshapp45/india-pure-ai-index">Code and data on GitHub</a></li>
+    </ul>
+  </section>
+
+  <footer>
+    Built by Harsha Patyal. End-of-day index using NSE closing prices. For research and educational purposes only — not investment advice. Not affiliated with NSE, BSE or any index provider.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const fmt = (n, d=2) => n.toLocaleString("en-IN", {minimumFractionDigits:d, maximumFractionDigits:d});
+const pct = n => (n > 0 ? "+" : "") + fmt(n) + "%";
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+fetch("data/baix.json?" + Date.now()).then(r => r.json()).then(d => {
+  if (d.mode !== "LIVE") {
+    const b = document.getElementById("banner");
+    b.hidden = false;
+    b.textContent = "Pre-launch TEST data. The official base date is 13 November 2026 (BAIX = 1,000). Numbers shown here are for testing only and are not index history.";
+  }
+  document.getElementById("level").textContent = fmt(d.level);
+  const c = document.getElementById("chg");
+  c.textContent = pct(d.day_change_pct) + " today";
+  c.className = "chg " + (d.day_change_pct >= 0 ? "up" : "down");
+  document.getElementById("asof").textContent = "Close of " + d.as_of + " · base " + d.base_date + " = 1,000";
+  document.getElementById("chartsub").textContent = "All series rebased to 1,000 on " + d.base_date + ".";
+  document.getElementById("retsub").textContent = d.base_date + " to " + d.as_of;
+
+  const labels = {BAIX:"BAIX", NIFTY50:"Nifty 50", NIFTYIT:"Nifty IT"};
+  document.getElementById("stats").innerHTML = Object.entries(d.since_base_pct).map(([k,v]) =>
+    `<div class="stat"><div class="k">${labels[k]||k}</div><div class="v ${v>=0?"up":"down"}">${pct(v)}</div></div>`).join("");
+
+  document.getElementById("rows").innerHTML = d.constituents.map(r =>
+    `<tr><td>${r.name}<div class="bar"><span style="width:${Math.min(100, r.weight_pct*5)}%"></span></div></td>
+     <td><span class="tag ${r.tier}">${r.tier}</span></td>
+     <td class="num">${r.ai_score.toFixed(2)}</td><td class="num">${fmt(r.weight_pct)}%</td></tr>`).join("");
+
+  if (window.Chart) {
+    const colors = {BAIX: css("--accent"), NIFTY50: css("--muted"), NIFTYIT: "#c07a2c"};
+    new Chart(document.getElementById("chart"), {
+      type: "line",
+      data: { labels: d.series.dates,
+        datasets: Object.keys(labels).filter(k => d.series[k]).map(k => ({
+          label: labels[k], data: d.series[k], borderColor: colors[k], backgroundColor: colors[k],
+          borderWidth: k === "BAIX" ? 2.5 : 1.5, pointRadius: 0, tension: 0.15 })) },
+      options: { responsive:true, maintainAspectRatio:false, interaction:{mode:"index", intersect:false},
+        scales: { x:{ ticks:{ maxTicksLimit:6, color:css("--muted") }, grid:{ display:false } },
+                  y:{ ticks:{ color:css("--muted") }, grid:{ color:css("--line") } } },
+        plugins: { legend:{ labels:{ color:css("--ink"), boxWidth:12 } } } }
+    });
+  }
+}).catch(() => {
+  document.getElementById("level").textContent = "Data unavailable";
+});
+</script>
+</body>
+</html>
