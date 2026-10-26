@@ -22,6 +22,7 @@ def main():
     adj = data["Adj Close"].rename(columns=names)
     close.to_csv(OUT / "close.csv")
     adj.to_csv(OUT / "adj_close.csv")
+    data["Volume"].rename(columns=names).to_csv(OUT / "volume.csv")   # shares traded on NSE each day
 
     print(f"Saved {len(close)} days, {close.index.min().date()} to {close.index.max().date()}")
     for name in tickers:
