@@ -2,6 +2,8 @@
 import sys
 import pandas as pd
 import weights
+from pathlib import Path
+from prices import BENCHMARKS, GLOBAL
 
 BASE_VALUE = 1000.0
 K = 1e9                      # notional index market value on the base date
@@ -22,10 +24,28 @@ def main(base_date):
     level = (px * index_shares).sum(axis=1) / divisor
 
     out = pd.DataFrame({"BAIX": level.round(2)})
-    for b in ("NIFTY50", "NIFTYIT"):                     # benchmarks rebased to 1,000
-        if b in close:
-            s = close.loc[base:, b].ffill()
-            out[b] = (s / s.iloc[0] * BASE_VALUE).round(2)
+    for b in BENCHMARKS:                                 # benchmarks rebased to 1,000
+        if b not in close:
+            continue
+        s = close.loc[base:, b].ffill()
+        if pd.isna(s.iloc[0]):                           # no price on the base date: skip, don't break the site
+            print(f"  WARNING: {b} has no price on the base date - left out")
+            continue
+        out[b] = (s / s.iloc[0] * BASE_VALUE).round(2)
+    gpath = Path("data/raw/prices/global.csv")             # global benchmarks, in rupees
+    if gpath.exists():
+        g = pd.read_csv(gpath, index_col=0, parse_dates=True)
+        for k in GLOBAL:
+            col = k + "_INR"
+            if col not in g or g[col].dropna().empty:
+                continue
+            s = g[col].dropna()
+            s.index = s.index + pd.Timedelta(days=1)       # US closes after India: use the previous US close
+            s = s.reindex(s.index.union(out.index)).ffill().reindex(out.index)
+            if pd.isna(s.iloc[0]):
+                print(f"  WARNING: {k} has no price on the base date - left out")
+                continue
+            out[k] = (s / s.iloc[0] * BASE_VALUE).round(2)
     out.index.name = "date"
     out.to_csv(OUT)
 

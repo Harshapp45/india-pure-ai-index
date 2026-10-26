@@ -14,7 +14,9 @@ NAMES = {"E2E": "E2E Networks", "NETWEB": "Netweb Technologies", "FRACTAL": "Fra
 
 
 def main():
-    lv = pd.read_csv(LEVELS, parse_dates=["date"])
+    lv = pd.read_csv(LEVELS, parse_dates=["date"]).dropna(axis=1, how="all")
+    series = [c for c in lv.columns if c != "date"]          # BAIX + whichever benchmarks have data
+    lv[series] = lv[series].ffill()
     w = pd.read_csv(WEIGHTS)
     last, prev = lv.iloc[-1], lv.iloc[-2]
     data = {
@@ -24,10 +26,10 @@ def main():
         "level": round(float(last.BAIX), 2),
         "day_change_pct": round(float(last.BAIX / prev.BAIX - 1) * 100, 2),
         "since_base_pct": {c: round(float(last[c] / 1000 - 1) * 100, 2)
-                           for c in ["BAIX", "NIFTY50", "NIFTYIT"] if c in lv},
+                           for c in series},
         "series": {
             "dates": lv.date.dt.strftime("%Y-%m-%d").tolist(),
-            **{c: lv[c].round(2).tolist() for c in ["BAIX", "NIFTY50", "NIFTYIT"] if c in lv},
+            **{c: lv[c].round(2).tolist() for c in series},
         },
         "constituents": [
             {"symbol": r.symbol, "name": NAMES.get(r.symbol, r.symbol), "tier": r.tier,
