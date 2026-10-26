@@ -1,5 +1,6 @@
 """BAIX - download daily closing prices for candidates and benchmarks."""
 from pathlib import Path
+import pandas as pd
 
 CANDIDATES = ["NETWEB", "E2E", "FRACTAL", "TCS", "INFY", "HCLTECH", "LTM",
               "LATENTVIEW", "PERSISTENT", "HAPPSTMNDS", "INTELLECT", "COFORGE"]
@@ -8,6 +9,16 @@ GLOBAL = {"GLOBALAI": "AIQ"}             # Global X Artificial Intelligence & Te
 FX = "INR=X"                              # US dollar in rupees
 START = "2024-06-01"
 OUT = Path("data/raw/prices")
+
+
+def keep_old(new, name):
+    """Fill gaps in today's download from the last good file, so one failed ticker never wipes its history."""
+    path = OUT / name
+    if path.exists():
+        old = pd.read_csv(path, index_col=0, parse_dates=True)
+        new = new.combine_first(old)          # today's values win; anything missing comes from before
+    new.to_csv(path)
+    return new
 
 
 def main():
@@ -20,9 +31,25 @@ def main():
     names = {v: k for k, v in tickers.items()}
     close = data["Close"].rename(columns=names)
     adj = data["Adj Close"].rename(columns=names)
-    close.to_csv(OUT / "close.csv")
-    adj.to_csv(OUT / "adj_close.csv")
-    data["Volume"].rename(columns=names).to_csv(OUT / "volume.csv")   # shares traded on NSE each day
+    vol = data["Volume"].rename(columns=names)                       # shares traded on NSE each day
+
+    # Yahoo sometimes returns nothing for one ticker in a batch: try those once more on their own
+    for name, t in tickers.items():
+        if name in close and close[name].notna().any():
+            continue
+        try:
+            one = yf.download(t, start=START, auto_adjust=False, progress=False)
+            if isinstance(one.columns, pd.MultiIndex):
+                one.columns = one.columns.get_level_values(0)
+            if not one.empty:
+                close[name], adj[name], vol[name] = one["Close"], one["Adj Close"], one["Volume"]
+                print(f"  retry worked for {name}")
+        except Exception as e:
+            print(f"  retry failed for {name}: {e}")
+
+    close = keep_old(close, "close.csv")
+    adj = keep_old(adj, "adj_close.csv")
+    keep_old(vol, "volume.csv")
 
     print(f"Saved {len(close)} days, {close.index.min().date()} to {close.index.max().date()}")
     for name in tickers:

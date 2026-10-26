@@ -29,6 +29,9 @@ def main(cutoff=None):
     for s in CANDIDATES:
         if s not in close or s not in vol:
             continue
+        if close[s].dropna().empty:
+            print(f"  WARNING: no prices for {s} - skipped")
+            continue
         tv = (close.loc[win, s] * vol.loc[win, s]).dropna()
         tv = tv[tv > 0]                                    # skip days with no trading
         adtv = tv.mean() / CRORE if len(tv) else float("nan")
