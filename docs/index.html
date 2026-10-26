@@ -29,7 +29,29 @@
   .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:20px; }
   .card h2 { font-size:18px; margin:0 0 4px; }
   .card p.sub { margin:0 0 14px; color:var(--muted); font-size:14px; }
-  .chartbox { position:relative; height:320px; }
+  .chart-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px; }
+  .chart-head h2 { margin:0 0 2px; }
+  .controls { display:flex; flex-wrap:wrap; gap:8px; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .seg button { font:inherit; font-size:13px; font-weight:600; padding:5px 11px; border:0; background:transparent;
+                color:var(--muted); cursor:pointer; font-variant-numeric:tabular-nums; }
+  .seg button + button { border-left:1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background:var(--ink); color:var(--card); }
+  .seg button:focus-visible, .legend button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .legend { display:flex; flex-wrap:wrap; align-items:center; gap:4px 18px; font-size:14px; min-height:26px;
+            padding:6px 0 8px; border-bottom:1px solid var(--line); margin-bottom:6px; }
+  .legend .date { color:var(--muted); font-variant-numeric:tabular-nums; min-width:92px; }
+  .legend button { font:inherit; background:none; border:0; padding:2px 0; color:var(--ink); cursor:pointer;
+                   display:inline-flex; align-items:center; gap:7px; font-variant-numeric:tabular-nums; }
+  .legend button[aria-pressed="false"] { opacity:.4; }
+  .legend .sw { width:10px; height:10px; border-radius:2px; flex:none; }
+  .legend .nm { color:var(--muted); }
+  .legend .val { font-weight:650; }
+  .legend .day { white-space:nowrap; }
+  .chartbox { position:relative; height:380px; }
+  .chart-note { margin:8px 0 0; font-size:13px; color:var(--muted); }
+  .chartbox.cmp { height:320px; }
+  @media (max-width:600px) { .chartbox, .chartbox.cmp { height:280px; } }
   .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
   .stat { border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
   .stat .k { font-size:13px; color:var(--muted); }
@@ -65,9 +87,41 @@
   </section>
 
   <section class="card">
-    <h2>BAIX vs benchmarks</h2>
-    <p class="sub" id="chartsub">All series rebased to 1,000 on the base date.</p>
-    <div class="chartbox"><canvas id="chart" aria-label="BAIX compared with Nifty 50 and Nifty IT"></canvas></div>
+    <div class="chart-head">
+      <div>
+        <h2>Bharat AI Index</h2>
+        <p class="sub" id="chartsub" style="margin:0">Index level, base 1,000.</p>
+      </div>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Time range" data-for="main">
+          <button type="button" data-range="1">1M</button>
+          <button type="button" data-range="3">3M</button>
+          <button type="button" data-range="0" aria-pressed="true">All</button>
+        </div>
+      </div>
+    </div>
+    <div class="legend" id="legend-main" aria-live="polite"></div>
+    <div class="chartbox" id="chart-main" role="img" aria-label="Chart of the Bharat AI Index level"></div>
+    <p class="chart-note">Bars along the bottom show the daily change. Hover or drag across the chart to read values.</p>
+  </section>
+
+  <section class="card">
+    <div class="chart-head">
+      <div>
+        <h2>BAIX vs benchmarks</h2>
+        <p class="sub" id="cmpsub" style="margin:0">Return since the base date.</p>
+      </div>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Time range" data-for="cmp">
+          <button type="button" data-range="1">1M</button>
+          <button type="button" data-range="3">3M</button>
+          <button type="button" data-range="0" aria-pressed="true">All</button>
+        </div>
+      </div>
+    </div>
+    <div class="legend" id="legend-cmp" aria-live="polite"></div>
+    <div class="chartbox cmp" id="chart-cmp" role="img" aria-label="Chart comparing BAIX with Nifty 50, Nifty IT, Nifty Smallcap 250 and a global AI benchmark"></div>
+    <p class="chart-note">Click a name to hide or show it. Global AI is the Global X Artificial Intelligence &amp; Technology ETF (AIQ), converted to rupees. It runs one trading day behind because US markets close after Indian ones.</p>
   </section>
 
   <section class="card">
@@ -102,11 +156,132 @@
   </footer>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 const fmt = (n, d=2) => n.toLocaleString("en-IN", {minimumFractionDigits:d, maximumFractionDigits:d});
 const pct = n => (n > 0 ? "+" : "") + fmt(n) + "%";
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+function rgba(hex, a) {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.split("").map(c => c + c).join("") : h, 16);
+  return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
+}
+
+function baseChart(el, LC) {
+  return LC.createChart(el, {
+    autoSize: true,
+    layout: { background: { type: "solid", color: "transparent" }, textColor: css("--muted"),
+              fontFamily: getComputedStyle(document.body).fontFamily, fontSize: 12 },
+    grid: { vertLines: { visible: false }, horzLines: { color: css("--line") } },
+    rightPriceScale: { borderVisible: false },
+    timeScale: { borderVisible: false, fixLeftEdge: true, fixRightEdge: true, rightOffset: 2 },
+    crosshair: { mode: LC.CrosshairMode.Normal,
+                 vertLine: { color: css("--muted"), style: LC.LineStyle.Dashed, labelBackgroundColor: css("--ink") },
+                 horzLine: { color: css("--muted"), style: LC.LineStyle.Dashed, labelBackgroundColor: css("--ink") } },
+    localization: { locale: "en-IN", dateFormat: "dd MMM yyyy" },
+    handleScale: { mouseWheel: false, pinch: true }, handleScroll: { mouseWheel: false, vertTouchDrag: false },
+  });
+}
+
+function wireRange(group, chart, dates) {
+  const btns = document.querySelectorAll(`[data-for="${group}"] button`);
+  btns.forEach(btn => btn.addEventListener("click", () => {
+    btns.forEach(x => x.setAttribute("aria-pressed", x === btn));
+    const m = +btn.dataset.range;
+    if (!m) { chart.timeScale().fitContent(); return; }
+    const last = dates[dates.length - 1];
+    const start = new Date(last + "T00:00:00"); start.setMonth(start.getMonth() - m);
+    const from = dates.find(t => new Date(t + "T00:00:00") >= start) || dates[0];
+    chart.timeScale().setVisibleRange({ from, to: last });
+  }));
+}
+
+const fmtDate = t => new Date(t + "T00:00:00").toLocaleDateString("en-IN", {day: "2-digit", month: "short", year: "numeric"});
+const money = p => p.toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+function drawCharts(d, labels) {
+  const LC = LightweightCharts;
+  const dates = d.series.dates, b = d.series.BAIX, n = dates.length;
+  const idx = new Map(dates.map((t, i) => [t, i]));
+  const accent = css("--accent"), up = css("--up"), down = css("--down");
+
+  // ---------- Chart 1: BAIX on its own ----------
+  const main = baseChart(document.getElementById("chart-main"), LC);
+  main.applyOptions({ localization: { locale: "en-IN", dateFormat: "dd MMM yyyy", priceFormatter: money },
+                      rightPriceScale: { scaleMargins: { top: 0.08, bottom: 0.24 } } });
+  const area = main.addAreaSeries({ lineColor: accent, lineWidth: 2.5, topColor: rgba(accent, .28),
+                                    bottomColor: rgba(accent, 0), priceLineVisible: false, crosshairMarkerRadius: 4 });
+  area.setData(dates.map((t, i) => ({ time: t, value: b[i] })));
+  area.createPriceLine({ price: 1000, color: css("--muted"), lineWidth: 1, lineStyle: LC.LineStyle.Dashed,
+                         axisLabelVisible: true, title: "Base 1,000" });
+  const bars = main.addHistogramSeries({ priceScaleId: "chg", priceLineVisible: false, lastValueVisible: false,
+                                         priceFormat: { type: "custom", formatter: v => v.toFixed(2) + "%" } });
+  main.priceScale("chg").applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+  const dayChg = i => i > 0 ? (b[i] / b[i - 1] - 1) * 100 : undefined;
+  bars.setData(dates.slice(1).map((t, j) => { const v = dayChg(j + 1);
+    return { time: t, value: v, color: rgba(v >= 0 ? up : down, .55) }; }));
+
+  const lm = document.getElementById("legend-main");
+  lm.innerHTML = `<span class="date" id="m-date"></span>
+    <span class="day"><span class="nm">Close</span> <span class="val" id="m-close"></span></span>
+    <span class="day"><span class="nm">Day</span> <span class="val" id="m-day"></span></span>
+    <span class="day"><span class="nm">Since base</span> <span class="val" id="m-base"></span></span>`;
+  const setVal = (id, v) => { const e = document.getElementById(id);
+    e.textContent = v === undefined ? "–" : pct(v); e.className = "val " + (v === undefined ? "" : v >= 0 ? "up" : "down"); };
+  function showMain(t) {
+    const i = idx.has(t) ? idx.get(t) : n - 1;
+    document.getElementById("m-date").textContent = fmtDate(dates[i]);
+    document.getElementById("m-close").textContent = money(b[i]);
+    setVal("m-day", dayChg(i));
+    setVal("m-base", (b[i] / 1000 - 1) * 100);
+  }
+  showMain(null);
+  main.subscribeCrosshairMove(p => showMain(p && p.time ? p.time : null));
+  wireRange("main", main, dates);
+  main.timeScale().fitContent();
+
+  // ---------- Chart 2: BAIX vs benchmarks (return since base) ----------
+  const keys = Object.keys(labels).filter(k => d.series[k]);
+  const colorOf = k => ({BAIX: accent, NIFTY50: css("--muted"), NIFTYIT: "#c07a2c", SMALLCAP250: "#6b5fb5", GLOBALAI: "#2a78b8"})[k];
+  const ret = k => d.series[k].map(v => (v / 1000 - 1) * 100);
+  const cmp = baseChart(document.getElementById("chart-cmp"), LC);
+  cmp.applyOptions({ rightPriceScale: { scaleMargins: { top: 0.1, bottom: 0.08 } } });
+  const series = {};
+  keys.slice().reverse().forEach(k => {
+    const s = cmp.addLineSeries({ color: colorOf(k), lineWidth: k === "BAIX" ? 2.5 : 1.75, priceLineVisible: false,
+                                  crosshairMarkerRadius: k === "BAIX" ? 4 : 3,
+                                  priceFormat: { type: "custom", formatter: v => pct(v), minMove: 0.01 } });
+    const r = ret(k);
+    s.setData(dates.map((t, i) => ({ time: t, value: r[i] })));
+    series[k] = s;
+  });
+  series.BAIX.createPriceLine({ price: 0, color: css("--muted"), lineWidth: 1, lineStyle: LC.LineStyle.Dashed,
+                                axisLabelVisible: false, title: "" });
+
+  const lc = document.getElementById("legend-cmp");
+  lc.innerHTML = `<span class="date" id="c-date"></span>` + keys.map(k =>
+    `<button type="button" data-key="${k}" aria-pressed="true"><span class="sw" style="background:${colorOf(k)}"></span>
+       <span class="nm">${labels[k]}</span> <span class="val" id="c-${k}"></span></button>`).join("");
+  const rets = Object.fromEntries(keys.map(k => [k, ret(k)]));
+  function showCmp(t) {
+    const i = idx.has(t) ? idx.get(t) : n - 1;
+    document.getElementById("c-date").textContent = fmtDate(dates[i]);
+    keys.forEach(k => setVal("c-" + k, rets[k][i]));
+  }
+  showCmp(null);
+  cmp.subscribeCrosshairMove(p => showCmp(p && p.time ? p.time : null));
+  lc.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-key]"); if (!btn) return;
+    const on = btn.getAttribute("aria-pressed") !== "true";
+    btn.setAttribute("aria-pressed", on);
+    series[btn.dataset.key].applyOptions({ visible: on });
+  });
+  wireRange("cmp", cmp, dates);
+  cmp.timeScale().fitContent();
+
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => location.reload());
+}
 
 fetch("data/baix.json?" + Date.now()).then(r => r.json()).then(d => {
   if (d.mode !== "LIVE") {
@@ -119,10 +294,11 @@ fetch("data/baix.json?" + Date.now()).then(r => r.json()).then(d => {
   c.textContent = pct(d.day_change_pct) + " today";
   c.className = "chg " + (d.day_change_pct >= 0 ? "up" : "down");
   document.getElementById("asof").textContent = "Close of " + d.as_of + " · base " + d.base_date + " = 1,000";
-  document.getElementById("chartsub").textContent = "All series rebased to 1,000 on " + d.base_date + ".";
+  document.getElementById("chartsub").textContent = "Index level, base " + d.base_date + " = 1,000.";
+  document.getElementById("cmpsub").textContent = "Return since the base date, " + d.base_date + ".";
   document.getElementById("retsub").textContent = d.base_date + " to " + d.as_of;
 
-  const labels = {BAIX:"BAIX", NIFTY50:"Nifty 50", NIFTYIT:"Nifty IT"};
+  const labels = {BAIX:"BAIX", NIFTY50:"Nifty 50", NIFTYIT:"Nifty IT", SMALLCAP250:"Nifty Smallcap 250", GLOBALAI:"Global AI (in ₹)"};
   document.getElementById("stats").innerHTML = Object.entries(d.since_base_pct).map(([k,v]) =>
     `<div class="stat"><div class="k">${labels[k]||k}</div><div class="v ${v>=0?"up":"down"}">${pct(v)}</div></div>`).join("");
 
@@ -131,20 +307,7 @@ fetch("data/baix.json?" + Date.now()).then(r => r.json()).then(d => {
      <td><span class="tag ${r.tier}">${r.tier}</span></td>
      <td class="num">${r.ai_score.toFixed(2)}</td><td class="num">${fmt(r.weight_pct)}%</td></tr>`).join("");
 
-  if (window.Chart) {
-    const colors = {BAIX: css("--accent"), NIFTY50: css("--muted"), NIFTYIT: "#c07a2c"};
-    new Chart(document.getElementById("chart"), {
-      type: "line",
-      data: { labels: d.series.dates,
-        datasets: Object.keys(labels).filter(k => d.series[k]).map(k => ({
-          label: labels[k], data: d.series[k], borderColor: colors[k], backgroundColor: colors[k],
-          borderWidth: k === "BAIX" ? 2.5 : 1.5, pointRadius: 0, tension: 0.15 })) },
-      options: { responsive:true, maintainAspectRatio:false, interaction:{mode:"index", intersect:false},
-        scales: { x:{ ticks:{ maxTicksLimit:6, color:css("--muted") }, grid:{ display:false } },
-                  y:{ ticks:{ color:css("--muted") }, grid:{ color:css("--line") } } },
-        plugins: { legend:{ labels:{ color:css("--ink"), boxWidth:12 } } } }
-    });
-  }
+  if (window.LightweightCharts) drawCharts(d, labels);
 }).catch(() => {
   document.getElementById("level").textContent = "Data unavailable";
 });
