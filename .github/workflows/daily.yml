@@ -12,12 +12,15 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
       - run: python src/prices.py
+      - name: Liquidity check (size and trading value, to the launch cut-off)
+        run: python src/liquidity.py 2026-11-14
+        continue-on-error: true     # a problem here must never stop the index update
       - run: python src/index_level.py 2026-07-01
       - run: python src/site_data.py
       - name: Save updated data and website
