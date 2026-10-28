@@ -24,6 +24,7 @@ def main():
         "base_date": lv.date.iloc[0].strftime("%Y-%m-%d"),
         "as_of": last.date.strftime("%Y-%m-%d"),
         "level": round(float(last.BAIX), 2),
+        "level_tr": round(float(last.BAIX_TR), 2) if "BAIX_TR" in lv else None,
         "day_change_pct": round(float(last.BAIX / prev.BAIX - 1) * 100, 2),
         "since_base_pct": {c: round(float(last[c] / 1000 - 1) * 100, 2)
                            for c in series},

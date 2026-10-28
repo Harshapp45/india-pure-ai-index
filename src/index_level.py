@@ -2,6 +2,7 @@
 import sys
 import pandas as pd
 import weights
+import corporate_actions as ca
 from pathlib import Path
 from prices import BENCHMARKS, GLOBAL
 
@@ -23,7 +24,16 @@ def main(base_date):
     px = close.loc[base:, w.index].ffill()
     level = (px * index_shares).sum(axis=1) / divisor
 
-    out = pd.DataFrame({"BAIX": level.round(2)})
+    # BAIX TR: dividends reinvested across the whole index on the ex-date (methodology Section 9)
+    #   TR(t) = TR(t-1) x [PR(t) + dividend points(t)] / PR(t-1)
+    adj = pd.read_csv("data/raw/prices/adj_close.csv", index_col=0, parse_dates=True)
+    div = ca.dividends(close, adj, list(w.index)).reindex(px.index).fillna(0.0)
+    div.iloc[0] = 0.0                                    # nothing reinvested on the base date itself
+    div_points = (div[w.index] * index_shares).sum(axis=1) / divisor
+    growth = (level + div_points) / level.shift(1)
+    tr = BASE_VALUE * growth.fillna(1.0).cumprod()
+
+    out = pd.DataFrame({"BAIX": level.round(2), "BAIX_TR": tr.round(2)})
     for b in BENCHMARKS:                                 # benchmarks rebased to 1,000
         if b not in close:
             continue
