@@ -1,13 +1,13 @@
 symbol,quarter,promoter_pct,free_float_pct,source,note
-NETWEB,Sep 2026,64.16,35.84,Screener (NSE shareholding pattern),
+NETWEB,Sep 2026,64.16,35.84,Screener (NSE shareholding pattern),Promoter stake down from 66.98% in Jun 2026
 E2E,Sep 2026,39.40,60.60,Screener (NSE shareholding pattern),L&T strategic stake counted as free float (simplified rule)
 FRACTAL,Sep 2026,16.82,83.18,Screener (NSE shareholding pattern),Pre-IPO investors are non-promoter
 TCS,Sep 2026,71.77,28.23,Screener (NSE shareholding pattern),
 INFY,Sep 2026,13.90,86.10,Screener (NSE shareholding pattern),
-HCLTECH,Sep 2026,60.88,39.12,Screener (NSE shareholding pattern),
-LTM,Sep 2026,69.01,30.99,Screener (NSE shareholding pattern),Formerly LTIMindtree
+HCLTECH,Jun 2026,60.88,39.12,Screener (NSE shareholding pattern),Not a constituent; not refreshed
+LTM,Sep 2026,69.01,30.99,Screener (NSE shareholding pattern),Formerly LTIMindtree; promoter stake up from 68.49%
 LATENTVIEW,Sep 2026,65.05,34.95,Screener (NSE shareholding pattern),
-PERSISTENT,Sep 2026,30.29,69.71,Screener (NSE shareholding pattern),
-HAPPSTMNDS,Sep 2026,44.21,55.79,Screener (NSE shareholding pattern),
-INTELLECT,Sep 2026,29.55,70.45,Screener (NSE shareholding pattern),
-COFORGE,Sep 2026,0.00,100.00,Screener (NSE shareholding pattern),No promoter group
+PERSISTENT,Sep 2026,30.29,69.71,Screener (NSE shareholding pattern),Not a constituent
+HAPPSTMNDS,Sep 2026,44.21,55.79,Screener (NSE shareholding pattern),Not a constituent
+INTELLECT,Jun 2026,29.63,70.37,Screener (NSE shareholding pattern),Not a constituent; not refreshed
+COFORGE,Jun 2026,0.00,100.00,Screener (NSE shareholding pattern),No promoter group; not a constituent
