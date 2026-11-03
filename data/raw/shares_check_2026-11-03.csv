@@ -1,0 +1,9 @@
+symbol,screener_mcap_cr,screener_price,implied_shares_cr,yahoo_shares_cr,diff_pct,result
+E2E,10179,495,20.56,20.55,0.07,OK (1:10 split; face value now Rs 1)
+NETWEB,24347,4096,5.944,5.945,0.01,OK (Aug-2026 QIP included)
+FRACTAL,12776,734,17.41,17.20,0.95,OVERRIDE with official 17.36 cr (Sep 2026 filing)
+LATENTVIEW,4059,196,20.71,20.71,0.01,OK
+TCS,905463,2503,361.8,361.8,0.01,OK
+INFY,465080,1146,405.8,405.0,0.20,OK
+HCLTECH,389954,1437,271.4,270.6,0.29,OK
+LTM,124797,4207,29.66,29.65,0.06,OK

@@ -1,6 +1,7 @@
 """BAIX - calculate constituent weights (tier budgets 75/25, 20% cap)."""
 import sys
 import pandas as pd
+from shares_data import load_shares
 
 PURE_BUDGET = 0.75
 CAP = 0.20
@@ -27,7 +28,7 @@ def cap_within_tier(w, cap):
 def main(price_date=None):
     cons = pd.read_csv(CONSTITUENTS)
     ff = pd.read_csv("data/raw/free_float.csv")[["symbol", "free_float_pct"]]
-    sh = pd.read_csv("data/raw/shares_yahoo.csv")[["symbol", "shares_outstanding"]]
+    sh = load_shares().rename("shares_outstanding").rename_axis("symbol").reset_index()
     close = pd.read_csv("data/raw/prices/close.csv", index_col=0, parse_dates=True)
 
     if price_date is None:

@@ -7,6 +7,7 @@ Writes data/processed/liquidity_check.csv. Run: python src/liquidity.py [cut-off
 """
 import sys
 import pandas as pd
+from shares_data import load_shares
 from prices import CANDIDATES
 
 MIN_ADTV_CR = 5          # Rs crore a day
@@ -19,7 +20,7 @@ def main(cutoff=None):
     close = pd.read_csv("data/raw/prices/close.csv", index_col=0, parse_dates=True)
     vol = pd.read_csv("data/raw/prices/volume.csv", index_col=0, parse_dates=True)
     ff = pd.read_csv("data/raw/free_float.csv").set_index("symbol")["free_float_pct"]
-    sh = pd.read_csv("data/raw/shares_yahoo.csv").set_index("symbol")["shares_outstanding"]
+    sh = load_shares()
 
     end = close.index[close.index <= pd.Timestamp(cutoff)].max() if cutoff else close.index.max()
     start = end - pd.DateOffset(months=6)
