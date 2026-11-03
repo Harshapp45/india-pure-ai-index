@@ -48,6 +48,9 @@
   .legend .nm { color:var(--muted); }
   .legend .val { font-weight:650; }
   .legend .day { white-space:nowrap; }
+  .legend .day .sw { display:inline-block; margin-right:6px; vertical-align:-1px; }
+  .seg button { white-space:nowrap; }
+  #cmp-pick { max-width:100%; overflow-x:auto; }
   .chartbox { position:relative; height:380px; }
   .chart-note { margin:8px 0 0; font-size:13px; color:var(--muted); }
   .chartbox.cmp { height:320px; }
@@ -112,6 +115,7 @@
         <p class="sub" id="cmpsub" style="margin:0">Return since the base date.</p>
       </div>
       <div class="controls">
+        <div class="seg" role="group" aria-label="Compare BAIX with" id="cmp-pick"></div>
         <div class="seg" role="group" aria-label="Time range" data-for="cmp">
           <button type="button" data-range="1">1M</button>
           <button type="button" data-range="3">3M</button>
@@ -120,8 +124,8 @@
       </div>
     </div>
     <div class="legend" id="legend-cmp" aria-live="polite"></div>
-    <div class="chartbox cmp" id="chart-cmp" role="img" aria-label="Chart comparing BAIX with Nifty 50, Nifty IT, Nifty Smallcap 250 and a global AI benchmark"></div>
-    <p class="chart-note">Click a name to hide or show it. Global AI is the Global X Artificial Intelligence &amp; Technology ETF (AIQ), converted to rupees. It runs one trading day behind because US markets close after Indian ones.</p>
+    <div class="chartbox cmp" id="chart-cmp" role="img" aria-label="Chart comparing BAIX with one chosen benchmark"></div>
+    <p class="chart-note">BAIX is always shown. Pick one benchmark at a time to compare. Global AI is the Global X Artificial Intelligence &amp; Technology ETF (AIQ), converted to rupees. It runs one trading day behind because US markets close after Indian ones.</p>
   </section>
 
   <section class="card">
@@ -259,23 +263,44 @@ function drawCharts(d, labels) {
   series.BAIX.createPriceLine({ price: 0, color: css("--muted"), lineWidth: 1, lineStyle: LC.LineStyle.Dashed,
                                 axisLabelVisible: false, title: "" });
 
+  // BAIX is always on; the reader picks ONE benchmark at a time
+  const short = {NIFTY50: "Nifty 50", NIFTYIT: "Nifty IT", SMALLCAP250: "Smallcap", GLOBALAI: "Global AI"};
+  const others = keys.filter(k => k !== "BAIX");
+  let pick = others.includes("NIFTY50") ? "NIFTY50" : others[0];
+  let lastT = null;
+  const picker = document.getElementById("cmp-pick");
+  picker.innerHTML = others.map(k =>
+    `<button type="button" data-key="${k}" aria-pressed="${k === pick}">${short[k] || labels[k]}</button>`).join("");
+
   const lc = document.getElementById("legend-cmp");
-  lc.innerHTML = `<span class="date" id="c-date"></span>` + keys.map(k =>
-    `<button type="button" data-key="${k}" aria-pressed="true"><span class="sw" style="background:${colorOf(k)}"></span>
-       <span class="nm">${labels[k]}</span> <span class="val" id="c-${k}"></span></button>`).join("");
+  lc.innerHTML = `<span class="date" id="c-date"></span>
+    <span class="day"><span class="sw" style="background:${colorOf("BAIX")}"></span><span class="nm">BAIX</span> <span class="val" id="c-BAIX"></span></span>
+    <span class="day"><span class="sw" id="c-sw"></span><span class="nm" id="c-name"></span> <span class="val" id="c-other"></span></span>
+    <span class="day"><span class="nm" id="c-gaplbl"></span> <span class="val" id="c-gap"></span></span>`;
   const rets = Object.fromEntries(keys.map(k => [k, ret(k)]));
   function showCmp(t) {
+    lastT = t;
     const i = idx.has(t) ? idx.get(t) : n - 1;
     document.getElementById("c-date").textContent = fmtDate(dates[i]);
-    keys.forEach(k => setVal("c-" + k, rets[k][i]));
+    setVal("c-BAIX", rets.BAIX[i]);
+    setVal("c-other", rets[pick][i]);
+    const g = document.getElementById("c-gap"), gap = rets.BAIX[i] - rets[pick][i];
+    document.getElementById("c-gaplbl").textContent = gap >= 0 ? "BAIX ahead by" : "BAIX behind by";
+    g.textContent = fmt(Math.abs(gap)) + " pts";
+    g.className = "val " + (gap >= 0 ? "up" : "down");
   }
-  showCmp(null);
+  function choose(k) {
+    pick = k;
+    picker.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.key === k));
+    others.forEach(o => series[o].applyOptions({ visible: o === k }));
+    document.getElementById("c-sw").style.background = colorOf(k);
+    document.getElementById("c-name").textContent = labels[k];
+    showCmp(lastT);
+  }
+  choose(pick);
   cmp.subscribeCrosshairMove(p => showCmp(p && p.time ? p.time : null));
-  lc.addEventListener("click", e => {
-    const btn = e.target.closest("button[data-key]"); if (!btn) return;
-    const on = btn.getAttribute("aria-pressed") !== "true";
-    btn.setAttribute("aria-pressed", on);
-    series[btn.dataset.key].applyOptions({ visible: on });
+  picker.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-key]"); if (btn) choose(btn.dataset.key);
   });
   wireRange("cmp", cmp, dates);
   cmp.timeScale().fitContent();
