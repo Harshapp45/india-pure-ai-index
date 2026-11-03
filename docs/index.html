@@ -41,9 +41,12 @@
   .legend { display:flex; flex-wrap:wrap; align-items:center; gap:4px 18px; font-size:14px; min-height:26px;
             padding:6px 0 8px; border-bottom:1px solid var(--line); margin-bottom:6px; }
   .legend .date { color:var(--muted); font-variant-numeric:tabular-nums; min-width:92px; }
-  .legend button { font:inherit; background:none; border:0; padding:2px 0; color:var(--ink); cursor:pointer;
-                   display:inline-flex; align-items:center; gap:7px; font-variant-numeric:tabular-nums; }
-  .legend button[aria-pressed="false"] { opacity:.4; }
+  .legend button { font:inherit; background:none; border:1px solid var(--line); border-radius:999px; padding:3px 10px;
+                   color:var(--ink); cursor:pointer; display:inline-flex; align-items:center; gap:7px;
+                   font-variant-numeric:tabular-nums; }
+  .legend button[aria-pressed="true"] { border-color:var(--muted); background:var(--bg); }
+  .legend button[aria-pressed="false"] { opacity:.5; }
+  .legend button[aria-pressed="false"] .sw { background:transparent !important; outline:1.5px solid currentColor; }
   .legend .sw { width:10px; height:10px; border-radius:2px; flex:none; }
   .legend .nm { color:var(--muted); }
   .legend .val { font-weight:650; }
@@ -115,7 +118,6 @@
         <p class="sub" id="cmpsub" style="margin:0">Return since the base date.</p>
       </div>
       <div class="controls">
-        <div class="seg" role="group" aria-label="Compare BAIX with" id="cmp-pick"></div>
         <div class="seg" role="group" aria-label="Time range" data-for="cmp">
           <button type="button" data-range="1">1M</button>
           <button type="button" data-range="3">3M</button>
@@ -125,7 +127,7 @@
     </div>
     <div class="legend" id="legend-cmp" aria-live="polite"></div>
     <div class="chartbox cmp" id="chart-cmp" role="img" aria-label="Chart comparing BAIX with one chosen benchmark"></div>
-    <p class="chart-note">BAIX is always shown. Pick one benchmark at a time to compare. Global AI is the Global X Artificial Intelligence &amp; Technology ETF (AIQ), converted to rupees. It runs one trading day behind because US markets close after Indian ones.</p>
+    <p class="chart-note">BAIX and Nifty 50 are shown first. Tap any other name to add it to the chart, and tap again to remove it. Gold is the Nippon India Gold ETF on NSE. Global AI (the Global X AI &amp; Technology ETF, AIQ) and the Nasdaq-100 are US-listed and converted to rupees; they run one trading day behind because US markets close after Indian ones.</p>
   </section>
 
   <section class="card">
@@ -247,7 +249,7 @@ function drawCharts(d, labels) {
 
   // ---------- Chart 2: BAIX vs benchmarks (return since base) ----------
   const keys = Object.keys(labels).filter(k => d.series[k]);
-  const colorOf = k => ({BAIX: accent, NIFTY50: css("--muted"), NIFTYIT: "#c07a2c", SMALLCAP250: "#6b5fb5", GLOBALAI: "#2a78b8"})[k];
+  const colorOf = k => ({BAIX: accent, NIFTY50: css("--muted"), NIFTYIT: "#c07a2c", SMALLCAP250: "#6b5fb5", GLOBALAI: "#2a78b8", NASDAQ100: "#c2416b", GOLD: "#a68a00"})[k];
   const ret = k => d.series[k].map(v => (v / 1000 - 1) * 100);
   const cmp = baseChart(document.getElementById("chart-cmp"), LC);
   cmp.applyOptions({ rightPriceScale: { scaleMargins: { top: 0.1, bottom: 0.08 } } });
@@ -263,44 +265,28 @@ function drawCharts(d, labels) {
   series.BAIX.createPriceLine({ price: 0, color: css("--muted"), lineWidth: 1, lineStyle: LC.LineStyle.Dashed,
                                 axisLabelVisible: false, title: "" });
 
-  // BAIX is always on; the reader picks ONE benchmark at a time
-  const short = {NIFTY50: "Nifty 50", NIFTYIT: "Nifty IT", SMALLCAP250: "Smallcap", GLOBALAI: "Global AI"};
+  // BAIX is always on. Nifty 50 starts on; every other benchmark starts off and is one tap away.
+  const DEFAULT_ON = ["NIFTY50"];
   const others = keys.filter(k => k !== "BAIX");
-  let pick = others.includes("NIFTY50") ? "NIFTY50" : others[0];
-  let lastT = null;
-  const picker = document.getElementById("cmp-pick");
-  picker.innerHTML = others.map(k =>
-    `<button type="button" data-key="${k}" aria-pressed="${k === pick}">${short[k] || labels[k]}</button>`).join("");
-
   const lc = document.getElementById("legend-cmp");
   lc.innerHTML = `<span class="date" id="c-date"></span>
-    <span class="day"><span class="sw" style="background:${colorOf("BAIX")}"></span><span class="nm">BAIX</span> <span class="val" id="c-BAIX"></span></span>
-    <span class="day"><span class="sw" id="c-sw"></span><span class="nm" id="c-name"></span> <span class="val" id="c-other"></span></span>
-    <span class="day"><span class="nm" id="c-gaplbl"></span> <span class="val" id="c-gap"></span></span>`;
+    <span class="day"><span class="sw" style="background:${colorOf("BAIX")}"></span><span class="nm">BAIX</span> <span class="val" id="c-BAIX"></span></span>` +
+    others.map(k => `<button type="button" data-key="${k}" aria-pressed="${DEFAULT_ON.includes(k)}"><span class="sw" style="background:${colorOf(k)}"></span>
+       <span class="nm">${labels[k]}</span> <span class="val" id="c-${k}"></span></button>`).join("");
+  others.forEach(k => series[k].applyOptions({ visible: DEFAULT_ON.includes(k) }));
   const rets = Object.fromEntries(keys.map(k => [k, ret(k)]));
   function showCmp(t) {
-    lastT = t;
     const i = idx.has(t) ? idx.get(t) : n - 1;
     document.getElementById("c-date").textContent = fmtDate(dates[i]);
-    setVal("c-BAIX", rets.BAIX[i]);
-    setVal("c-other", rets[pick][i]);
-    const g = document.getElementById("c-gap"), gap = rets.BAIX[i] - rets[pick][i];
-    document.getElementById("c-gaplbl").textContent = gap >= 0 ? "BAIX ahead by" : "BAIX behind by";
-    g.textContent = fmt(Math.abs(gap)) + " pts";
-    g.className = "val " + (gap >= 0 ? "up" : "down");
+    keys.forEach(k => setVal("c-" + k, rets[k][i]));
   }
-  function choose(k) {
-    pick = k;
-    picker.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.key === k));
-    others.forEach(o => series[o].applyOptions({ visible: o === k }));
-    document.getElementById("c-sw").style.background = colorOf(k);
-    document.getElementById("c-name").textContent = labels[k];
-    showCmp(lastT);
-  }
-  choose(pick);
+  showCmp(null);
   cmp.subscribeCrosshairMove(p => showCmp(p && p.time ? p.time : null));
-  picker.addEventListener("click", e => {
-    const btn = e.target.closest("button[data-key]"); if (btn) choose(btn.dataset.key);
+  lc.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-key]"); if (!btn) return;
+    const on = btn.getAttribute("aria-pressed") !== "true";
+    btn.setAttribute("aria-pressed", on);
+    series[btn.dataset.key].applyOptions({ visible: on });
   });
   wireRange("cmp", cmp, dates);
   cmp.timeScale().fitContent();
@@ -323,7 +309,7 @@ fetch("data/baix.json?" + Date.now()).then(r => r.json()).then(d => {
   document.getElementById("cmpsub").textContent = "Return since the base date, " + d.base_date + ".";
   document.getElementById("retsub").textContent = d.base_date + " to " + d.as_of;
 
-  const labels = {BAIX:"BAIX", NIFTY50:"Nifty 50", NIFTYIT:"Nifty IT", SMALLCAP250:"Nifty Smallcap 250", GLOBALAI:"Global AI (in ₹)"};
+  const labels = {BAIX:"BAIX", NIFTY50:"Nifty 50", NIFTYIT:"Nifty IT", SMALLCAP250:"Nifty Smallcap 250", GOLD:"Gold (₹)", GLOBALAI:"Global AI (in ₹)", NASDAQ100:"Nasdaq-100 (in ₹)"};
   document.getElementById("stats").innerHTML = Object.entries(d.since_base_pct).map(([k,v]) =>
     `<div class="stat"><div class="k">${labels[k]||k}</div><div class="v ${v>=0?"up":"down"}">${pct(v)}</div></div>`).join("");
 

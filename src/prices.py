@@ -4,8 +4,10 @@ import pandas as pd
 
 CANDIDATES = ["NETWEB", "E2E", "FRACTAL", "TCS", "INFY", "HCLTECH", "LTM",
               "LATENTVIEW", "PERSISTENT", "HAPPSTMNDS", "INTELLECT", "COFORGE"]
-BENCHMARKS = {"NIFTY50": "^NSEI", "NIFTYIT": "^CNXIT", "SMALLCAP250": "NIFTYSMLCAP250.NS"}
-GLOBAL = {"GLOBALAI": "AIQ"}             # Global X Artificial Intelligence & Technology ETF (US, in USD)
+BENCHMARKS = {"NIFTY50": "^NSEI", "NIFTYIT": "^CNXIT", "SMALLCAP250": "NIFTYSMLCAP250.NS",
+              "GOLD": "GOLDBEES.NS"}       # gold: Nippon India Gold ETF, traded on NSE in rupees
+GLOBAL = {"GLOBALAI": "AIQ",             # Global X Artificial Intelligence & Technology ETF (US, in USD)
+          "NASDAQ100": "^NDX"}           # Nasdaq-100 index (US, in USD)
 FX = "INR=X"                              # US dollar in rupees
 START = "2024-06-01"
 OUT = Path("data/raw/prices")
@@ -63,7 +65,8 @@ def main():
         g = yf.download(list(GLOBAL.values()) + [FX], start=START, auto_adjust=False, progress=False)["Close"]
         g = g.rename(columns={v: k for k, v in GLOBAL.items()}).rename(columns={FX: "USDINR"}).ffill()
         for k in GLOBAL:
-            g[k + "_INR"] = g[k] * g["USDINR"]
+            if k in g:                    # one failed ticker must not stop the others
+                g[k + "_INR"] = g[k] * g["USDINR"]
         g.dropna(how="all").to_csv(OUT / "global.csv")
         print(f"Global: saved {len(g)} days to {(OUT / 'global.csv')}")
     except Exception as e:                # never let a global hiccup stop the Indian index update
