@@ -10,7 +10,7 @@ OUT = Path("docs/data/baix.json")
 
 NAMES = {"E2E": "E2E Networks", "NETWEB": "Netweb Technologies", "FRACTAL": "Fractal Analytics",
          "LATENTVIEW": "LatentView Analytics", "TCS": "Tata Consultancy Services",
-         "INFY": "Infosys", "LTM": "LTM (formerly LTIMindtree)"}
+         "INFY": "Infosys", "HCLTECH": "HCL Technologies", "LTM": "LTM (formerly LTIMindtree)"}
 
 
 def main():
