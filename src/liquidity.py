@@ -2,7 +2,7 @@
 
 For every candidate, over the 6 months to the cut-off date:
   - average daily traded value (price x shares traded on NSE) must be >= Rs 5 crore
-  - free-float market cap must be >= Rs 1,000 crore
+  - average free-float market cap must be >= Rs 1,000 crore
 Writes data/processed/liquidity_check.csv. Run: python src/liquidity.py [cut-off YYYY-MM-DD]
 """
 import sys
@@ -35,14 +35,16 @@ def main(cutoff=None):
         tv = (close.loc[win, s] * vol.loc[win, s]).dropna()
         tv = tv[tv > 0]                                    # skip days with no trading
         adtv = tv.mean() / CRORE if len(tv) else float("nan")
-        px = close.loc[:end, s].dropna().iloc[-1]
-        ffm = px * sh.get(s, float("nan")) * ff.get(s, float("nan")) / 100 / CRORE
+        k = sh.get(s, float("nan")) * ff.get(s, float("nan")) / 100 / CRORE
+        ffm = close.loc[win, s].dropna().mean() * k          # 6-month average (methodology Section 4)
+        ffm_now = close.loc[:end, s].dropna().iloc[-1] * k   # shown for information only
         rows.append({
             "symbol": s,
             "days": len(tv),
             "adtv_cr": round(adtv, 2),
             "median_tv_cr": round(tv.median() / CRORE, 2) if len(tv) else None,
             "ff_mcap_cr": round(ffm, 0),
+            "ff_mcap_latest_cr": round(ffm_now, 0),
             "pass_adtv": adtv >= MIN_ADTV_CR,
             "pass_ffmcap": ffm >= MIN_FFMCAP_CR,
         })
