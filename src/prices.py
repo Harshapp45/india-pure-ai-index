@@ -19,6 +19,9 @@ def keep_old(new, name):
     if path.exists():
         old = pd.read_csv(path, index_col=0, parse_dates=True)
         new = new.combine_first(old)          # today's values win; anything missing comes from before
+    # A day where no stock has a price yet (Yahoo has not published the close) is dropped, never copied
+    # forward as a fake flat day. The next run picks the day up once the data exists.
+    new = new.dropna(how="all", subset=[c for c in CANDIDATES if c in new])
     new.to_csv(path)
     return new
 

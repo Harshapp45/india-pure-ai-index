@@ -1,0 +1,9 @@
+symbol,tier,ai_score,note
+E2E,pure,0.50,Estimated >=50% GPU cloud -> conservative rule -> 0.5
+NETWEB,pure,1.00,AI Systems 59.9% of H1 FY27 revenue (reported Oct-2026)
+FRACTAL,broad,0.25,No AI revenue split; estimate 20-50% in line with peer LatentView (28%) -> conservative rule -> 0.25 (decided 13-Nov-2026)
+LATENTVIEW,pure,0.50,28% of FY26 revenue from AI projects (reported 16-May-2026)
+TCS,broad,0.25,Annualised AI revenue $3.1bn about 10% (Q2 FY27)
+INFY,broad,0.25,AI 10.5% of revenue (reported Q2 FY27)
+HCLTECH,broad,0.25,Advanced AI $219m of $3724m = 5.9% (derived Q2 FY27)
+LTM,broad,0.25,AI about 12% of revenue (CEO Jul-2026)
