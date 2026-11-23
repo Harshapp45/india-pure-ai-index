@@ -3,9 +3,9 @@ import json
 from pathlib import Path
 import pandas as pd
 
-MODE = "TEST"                                   # becomes "LIVE" at launch
-LEVELS = "data/processed/baix_TEST.csv"
-WEIGHTS = "data/processed/weights_DRAFT.csv"
+MODE = "LIVE"                                   # official index since the 13 Nov 2026 base date
+LEVELS = "data/processed/baix_LIVE.csv"
+WEIGHTS = "data/processed/weights_LIVE.csv"
 OUT = Path("docs/data/baix.json")
 
 NAMES = {"E2E": "E2E Networks", "NETWEB": "Netweb Technologies", "FRACTAL": "Fractal Analytics",
