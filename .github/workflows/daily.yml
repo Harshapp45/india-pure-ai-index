@@ -18,12 +18,13 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt
       - run: python src/prices.py
-      - name: Liquidity check (size and trading value, to the launch cut-off)
-        run: python src/liquidity.py 2026-11-14
+      - name: Liquidity check (size and trading value, to the next review cut-off on 30 May 2027)
+        run: python src/liquidity.py 2027-05-30
         continue-on-error: true     # a problem here must never stop the index update
-      - run: python src/index_level.py 2026-07-01
+      - name: BAIX (LIVE, frozen base date 13 Nov 2026)
+        run: python src/index_level.py 2026-11-13 live
       - name: Corporate actions check (splits, special dividends, suspensions)
-        run: python src/corporate_actions.py 2026-07-01
+        run: python src/corporate_actions.py 2026-11-13
         continue-on-error: true     # a problem here must never stop the index update
       - run: python src/site_data.py
       - name: Save updated data and website
