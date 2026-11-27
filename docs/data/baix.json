@@ -1,19 +1,19 @@
 {
  "mode": "LIVE",
  "base_date": "2026-11-13",
- "as_of": "2026-11-25",
- "level": 922.27,
- "level_tr": 922.27,
- "day_change_pct": -0.27,
+ "as_of": "2026-11-26",
+ "level": 952.06,
+ "level_tr": 952.06,
+ "day_change_pct": 3.23,
  "since_base_pct": {
-  "BAIX": -7.77,
-  "BAIX_TR": -7.77,
-  "NIFTY50": 2.68,
-  "NIFTYIT": 0.87,
-  "SMALLCAP250": -1.73,
-  "GOLD": -10.54,
-  "GLOBALAI": -10.42,
-  "NASDAQ100": -8.11
+  "BAIX": -4.79,
+  "BAIX_TR": -4.79,
+  "NIFTY50": 2.94,
+  "NIFTYIT": 4.56,
+  "SMALLCAP250": -1.14,
+  "GOLD": -9.79,
+  "GLOBALAI": -10.96,
+  "NASDAQ100": -8.8
  },
  "series": {
   "dates": [
@@ -24,7 +24,8 @@
    "2026-11-19",
    "2026-11-20",
    "2026-11-23",
-   "2026-11-25"
+   "2026-11-25",
+   "2026-11-26"
   ],
   "BAIX": [
    1000.0,
@@ -34,7 +35,8 @@
    948.97,
    931.56,
    924.73,
-   922.27
+   922.27,
+   952.06
   ],
   "BAIX_TR": [
    1000.0,
@@ -44,7 +46,8 @@
    948.97,
    931.56,
    924.73,
-   922.27
+   922.27,
+   952.06
   ],
   "NIFTY50": [
    1000.0,
@@ -54,7 +57,8 @@
    1014.72,
    1026.1,
    1008.17,
-   1026.84
+   1026.84,
+   1029.44
   ],
   "NIFTYIT": [
    1000.0,
@@ -64,7 +68,8 @@
    968.32,
    980.94,
    997.48,
-   1008.66
+   1008.66,
+   1045.59
   ],
   "SMALLCAP250": [
    1000.0,
@@ -74,7 +79,8 @@
    992.33,
    991.36,
    984.51,
-   982.72
+   982.72,
+   988.56
   ],
   "GOLD": [
    1000.0,
@@ -84,7 +90,8 @@
    949.87,
    913.32,
    920.83,
-   894.56
+   894.56,
+   902.15
   ],
   "GLOBALAI": [
    1000.0,
@@ -94,7 +101,8 @@
    936.24,
    912.5,
    853.93,
-   895.79
+   895.79,
+   890.42
   ],
   "NASDAQ100": [
    1000.0,
@@ -104,7 +112,8 @@
    956.25,
    935.02,
    880.95,
-   918.9
+   918.9,
+   911.97
   ]
  },
  "constituents": [
@@ -113,42 +122,42 @@
    "name": "E2E Networks",
    "tier": "pure",
    "ai_score": 0.5,
-   "weight_pct": 21.94
+   "weight_pct": 22.31
   },
   {
    "symbol": "NETWEB",
    "name": "Netweb Technologies",
    "tier": "pure",
    "ai_score": 1.0,
-   "weight_pct": 25.91
+   "weight_pct": 25.39
   },
   {
    "symbol": "LATENTVIEW",
    "name": "LatentView Analytics",
    "tier": "pure",
    "ai_score": 0.5,
-   "weight_pct": 24.82
+   "weight_pct": 24.52
   },
   {
    "symbol": "INFY",
    "name": "Infosys",
    "tier": "broad",
    "ai_score": 0.25,
-   "weight_pct": 12.7
+   "weight_pct": 12.88
   },
   {
    "symbol": "TCS",
    "name": "Tata Consultancy Services",
    "tier": "broad",
    "ai_score": 0.25,
-   "weight_pct": 8.29
+   "weight_pct": 8.42
   },
   {
    "symbol": "HCLTECH",
    "name": "HCL Technologies",
    "tier": "broad",
    "ai_score": 0.25,
-   "weight_pct": 4.71
+   "weight_pct": 4.85
   },
   {
    "symbol": "LTM",
@@ -162,7 +171,7 @@
    "name": "Fractal Analytics",
    "tier": "broad",
    "ai_score": 0.25,
-   "weight_pct": 0.37
+   "weight_pct": 0.36
   }
  ]
 }
